@@ -1,0 +1,36 @@
+---
+- name: Копирование пакета deb на удаленный хост
+  ansible.builtin.copy:
+    src: files/distr/elasticsearch-7.9.3-amd64.deb
+    dest: /home/debian/elasticsearch-7.9.3-amd64.deb
+
+- name: Install Kibana
+  ansible.builtin.apt:
+    deb: /home/debian/elasticsearch-7.9.3-amd64.deb
+    state: present
+  become: yes
+
+- name: Reload systemd configs
+  systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: Enable Elasticsearch service
+  systemd:
+    name: elasticsearch
+    enabled: yes
+    state: started
+  become: yes
+
+- name: Put new config file
+  template: 
+    src: files/elastic.yml
+    dest: /etc/elasticsearch/elasticsearch.yml
+    owner: root
+    group: root
+    mode: 0755 
+
+- name: Restart elastic
+  systemd:
+    name: elasticsearch.service
+    state: restarted

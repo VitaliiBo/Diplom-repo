@@ -1,0 +1,9 @@
+---
+- name: Playbook for installing Nginx
+  hosts: proxy
+  become: true
+  tasks:
+    - name: Копировать файл на удаленную машину
+      copy:
+        src: "/home/bondarenko/.ssh/id_rsa"
+        dest: "/home/debian/.ssh/"

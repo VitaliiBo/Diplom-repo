@@ -1,0 +1,41 @@
+---
+- name: Копирование пакета deb на удаленный хост
+  ansible.builtin.copy:
+    src: files/distr/kibana-7.9.3-amd64.deb
+    dest: /home/debian/kibana-7.9.3-amd64.deb
+
+- name: Install Kibana
+  ansible.builtin.apt:
+    deb: /home/debian/kibana-7.9.3-amd64.deb
+    state: present
+  become: yes
+
+- name: Reload systemd configs
+  systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: Upload filebeat config
+  template: 
+    src: kibana.yml.j2
+    dest: /etc/kibana/kibana.yml
+    owner: root
+    group: root
+    mode: 0755 
+
+- name: Enable Kibana service
+  systemd:
+    name: kibana
+    enabled: yes
+    state: started
+  become: yes
+
+
+- name: Restart Kibana service
+  systemd:
+    name: kibana
+    state: restarted
+  become: yes
+
+
+    

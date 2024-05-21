@@ -1,0 +1,63 @@
+---
+- name: Update apt
+  apt:
+    update_cache: yes
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+  become: true
+
+- name: Copy HTML template to the server
+  copy:
+    src: ./files/index.html
+    dest: /var/www/html/index.html
+
+- name: Deploy custom Nginx configuration
+  template:
+    src: default.j2
+    dest: "/etc/nginx/sites-available/default"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Resrart nginx
+  service:
+    name: nginx
+    state: restarted
+
+- name: Test Nginx configuration
+  command: nginx -t
+
+- name: Copy server info script to the server
+  copy:
+    src: ./files/server_info.sh
+    dest: /usr/local/bin/server_info.sh
+    mode: "0755"
+
+- name: Execute server_info.sh script
+  command: /usr/local/bin/server_info.sh
+  register: server_info_output
+
+- name: Set facts from script output
+  set_fact:
+    ip_address: "{{ server_info_output.stdout_lines[0].split('=')[1] }}"
+    hostname: "{{ server_info_output.stdout_lines[1].split('=')[1] }}"
+    memory_usage: "{{ server_info_output.stdout_lines[2].split('=')[1] }}"
+
+- name: Replace placeholders in index.html
+  replace:
+    path: /var/www/html/index.html
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+  loop:
+    - { regexp: '<!-- IP_ADDRESS -->', replace: "{{ ip_address }}" }
+    - { regexp: '<!-- HOSTNAME -->', replace: "{{ hostname }}" }
+    - { regexp: '<!-- MEMORY_USAGE -->', replace: "{{ memory_usage }}" }
+
+- name: Resrart nginx
+  service:
+    name: nginx
+    state: restarted
+  retries: 3
+  delay: 3

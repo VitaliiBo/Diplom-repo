@@ -1,0 +1,32 @@
+---
+- name: Update apt
+  apt:
+    update_cache: yes
+    
+- name: install zabbix-agent
+  apt:
+    name: zabbix-agent
+    state: latest
+# - name: Install Zabbix Agent
+#   include_role:
+#     name:  community.zabbix.zabbix_agent # устанавливает готовую роль на хостах
+
+- name: stop zabbix-agent
+  service:
+    name: zabbix-agent.service
+    state: stopped
+
+- name: Copy Zabbix Agent configuration file
+  template:
+    src: zabbix_agentd.conf.j2
+    dest: /etc/zabbix/zabbix_agentd.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+
+- name: Restart Zabbix Agent service
+  systemd:
+    name: zabbix-agent
+    state: restarted
+  become: yes

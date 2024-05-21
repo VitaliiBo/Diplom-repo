@@ -1,0 +1,7 @@
+---
+elasticsearch_host: "elastic"
+elasticsearch_port: 9200
+elasticsearch_username: "elastic"
+elasticsearch_password: "changeme"
+kibana_host: "kibana"
+kibana_port: 5601

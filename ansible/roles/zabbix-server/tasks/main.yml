@@ -1,0 +1,28 @@
+---
+- name: Update APT cache
+  apt:
+    update_cache: yes
+
+- name: Install Docker
+  apt: 
+    name: docker 
+    state: latest
+
+- name: Install DockerComp
+  apt: 
+    name: docker-compose 
+    state: latest
+
+- name: copy Docker Compose files
+  template: 
+    src: files/{{zabbix_compose}}.yml
+    dest: /home/debian/
+    owner: debian
+    group: root
+    mode: 0755
+    
+- name: deploy Docker Compose stack
+  community.docker.docker_compose:
+    project_src: /home/debian/
+    files:
+    - '{{zabbix_compose}}.yml'

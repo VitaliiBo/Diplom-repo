@@ -1,0 +1,26 @@
+---
+- name: Копирование пакета deb на удаленный хост
+  ansible.builtin.copy:
+    src: files/distr/filebeat-7.9.3-amd64.deb
+    dest: /home/debian/filebeat-7.9.3-amd64.deb
+
+- name: Install Filebeat
+  apt:
+    deb: /home/debian/filebeat-7.9.3-amd64.deb
+
+
+- name: Upload filebeat config
+  template: 
+    src: filebeat.yml.j2
+    dest: /etc/filebeat/filebeat.yml 
+    owner: root
+    group: root
+    mode: 0755 
+  notify:
+    - Restart Filebeat
+    
+- name: Ensure Filebeat is running and enabled
+  systemd:
+    name: filebeat
+    state: started
+    enabled: yes

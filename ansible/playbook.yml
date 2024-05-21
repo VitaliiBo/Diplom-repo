@@ -1,0 +1,50 @@
+---
+- name: Copy id_rsa file to remote host
+  hosts: proxy
+  become: true
+  tasks:
+    - name: Copy id_rsa file
+      copy:
+        src: /home/bondarenko/.ssh/id_rsa
+        dest: /home/debian/.ssh/id_rsa
+        mode: '0600'
+
+- name: Copy id_rsa file to remote host
+  hosts: proxy
+  become: true
+  roles:
+    - deploy_zabbix-agent
+
+- name: Install and setup Elastcsearch
+  hosts: elastic
+  become: true
+  roles:
+    - elastic
+    - deploy_zabbix-agent
+
+- name: Install and setup Kibana
+  hosts: kibana
+  become: true
+  roles:
+    - kibana
+    - deploy_zabbix-agent
+
+- name: Install Zabbix
+  hosts: zabbix
+  become: true
+  vars:
+    zabbix_db_password: "password"
+    ansible_python_interpreter: /usr/bin/python3
+    zabbix_compose: zabbix-compose
+  roles:
+    - zabbix-server
+    - deploy_zabbix-agent
+
+- name: Playbook for installing Nginx
+  hosts: nginx
+  become: true
+  roles:
+    - nginx_install
+    - deploy_zabbix-agent
+    - deploy_filebeat
+

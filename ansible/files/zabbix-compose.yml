@@ -1,0 +1,83 @@
+version: "3"
+services:
+
+  netology-db:
+    image: postgres:latest
+    container_name: BondarenkoVA-netology-db
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data/pgdata
+    environment:
+      POSTGRES_PASSWORD: '{{zabbix_password}}'
+      POSTGRES_USER: postgres
+      POSTGRES_DB: BondarenkoVA-netology_db
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+      PGDATA: /var/lib/postgresql/data/pgdata 
+    networks:
+      BondarenkoVA-my-netology-hw:
+        ipv4_address: 172.22.0.2
+
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: BondarenkoVA-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: BondarenkoVA@ilove-netology.com
+      PGADMIN_DEFAULT_PASSWORD: 123
+    ports:
+      - "61231:80"
+    networks:
+      BondarenkoVA-my-netology-hw:
+        ipv4_address: 172.22.0.3
+    restart: always
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql
+    links:
+      - netology-db
+    container_name: BondarenkoVA-netology-zabbix
+    environment:
+      DB_SERVER_HOST: '172.22.0.2'
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: '{{zabbix_password}}'
+    ports:
+      # - "10050:10050"
+      - "10051:10051"
+    networks:
+      BondarenkoVA-my-netology-hw:
+        ipv4_address: 172.22.0.4
+    restart: always
+    depends_on:
+      - netology-db
+      
+      
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql
+    container_name: zabbix-web
+    hostname: zabbix-web
+    restart: always
+    environment:
+      DB_SERVER_HOST: netology-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: '{{zabbix_password}}'
+      ZBX_SERVER_HOST: zabbix-server
+      PHP_TZ: "Europe/Moscow"
+    ports:
+      - 80:8080
+      - 443:443
+    networks:
+      BondarenkoVA-my-netology-hw:
+        ipv4_address: 172.22.0.5
+      
+    depends_on:
+      - netology-db
+      - zabbix-server
+
+networks:
+  BondarenkoVA-my-netology-hw:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24

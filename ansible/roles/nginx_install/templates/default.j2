@@ -1,0 +1,23 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    server_name _;
+
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    location / {
+        # First attempt to serve request as file, then
+        # as directory, then fall back to displaying a 404.
+        try_files $uri $uri/ =404;
+    }
+
+    location /basic_status {
+        stub_status;
+        allow {{zabbix}};
+        allow 127.0.0.1;
+        deny all;
+    }
+
+}
